@@ -1,57 +1,74 @@
-# Product Service - FastAPI Backend
+# Servicio de Productos - Marketplace API
 
-Este módulo define una capa de servicios asincrónica para la gestión de productos en una base de datos MongoDB utilizando `motor`, el driver asíncrono oficial para MongoDB en Python.
+Este microservicio es parte de la aplicación "Marketplace de Frutas y Verduras". Su única responsabilidad es gestionar todas las operaciones relacionadas con los productos (CRUD: Crear, Leer, Actualizar, Eliminar).
 
-## 📂 Ubicación
+## Características Principales
 
-`app/services/product_service.py`
+-   Crear nuevos productos.
+-   Obtener la lista de todos los productos con paginación.
+-   Obtener los detalles de un producto específico por su ID.
+-   Actualizar la información de un producto.
+-   Eliminar un producto.
+-   Servir las imágenes de los productos desde un directorio estático.
 
-## 🚀 Funcionalidades principales
+## Tecnologías Utilizadas
 
-Este archivo proporciona funciones CRUD para trabajar con productos en la colección `products`.
+-   **Framework:** FastAPI
+-   **Base de Datos:** MongoDB (a través de Motor)
+-   **Lenguaje:** Python 3.11+
+-   **Validación de Datos:** Pydantic
 
-### 📋 Operaciones disponibles
+## Configuración y Puesta en Marcha
 
-- **`get_all_products(db, skip=0, limit=20)`**  
-  Retorna una lista paginada de productos.
+### Prerrequisitos
 
-- **`get_product_by_id(db, product_id)`**  
-  Busca un producto por su ID. Devuelve `None` si no lo encuentra o si el ID no es válido.
+-   Python 3.11 o superior.
+-   Una instancia de MongoDB corriendo.
+-   Tener el código del `common/` en el directorio raíz del proyecto.
 
-- **`create_product(db, product_in)`**  
-  Crea un nuevo producto y lo guarda en la base de datos. Retorna el producto creado.
+### 1. Configuración del Entorno
 
-- **`update_product(db, product_id, product_in)`**  
-  Actualiza un producto existente si el ID es válido y los datos a actualizar están presentes.
+Este servicio se ejecuta desde la raíz del monorepo (`market_place_project/`).
 
-- **`delete_product(db, product_id)`**  
-  Elimina un producto por su ID. Retorna `True` si se eliminó correctamente.
+1.  **Variables de Entorno:**
+    Crea un archivo `.env` en la raíz de este servicio (`products_service/.env`) con el siguiente contenido:
+    ```env
+    PROJECT_NAME="Servicio de Productos"
+    MONGO_URI="mongodb://localhost:27017/"
+    MONGO_DB_NAME="marketplace_db"
+    ```
 
-## 🧱 Modelos utilizados
+2.  **Dependencias:**
+    Se recomienda usar un entorno virtual. Desde la raíz del proyecto (`market_place_project/`), instala las dependencias:
+    ```bash
+    # Activa tu entorno virtual principal si tienes uno
+    pip install -r products_service/requirements.txt
+    ```
 
-Los modelos provienen de `app.models` y se espera que estén definidos como:
+### 2. Ejecución del Servicio
 
-- `ProductCreate`
-- `ProductUpdate`
-- `ProductInDB`
+Para ejecutar el servidor, abre una terminal en la **carpeta raíz del proyecto (`market_place_project/`)** y sigue estos pasos:
 
-> Asegúrate de que estos modelos usen `pydantic.BaseModel` y estén configurados para soportar el trabajo con MongoDB (`ObjectId`, `alias`, etc.).
+1.  **Activa tu entorno virtual.**
 
-## 🛠 Requisitos
+2.  **Configura el `PYTHONPATH`** para que Python pueda encontrar el código compartido en `common/`:
+    *(Recuerda hacerlo en cada nueva sesión de terminal)*
+    ```powershell
+    # En Windows (PowerShell)
+    $env:PYTHONPATH="."
+    ```
+    ```bash
+    # En Linux o macOS
+    export PYTHONPATH="."
+    ```
 
-- Python 3.10+
-- `motor`
-- `pydantic`
-- `bson`
+3.  **Inicia el servidor Uvicorn** en el puerto `8001`:
+    ```bash
+    uvicorn products_service.app.main:app --reload --port 8001
+    ```
 
-## 📌 Notas
+### Documentación de la API
 
-- Todas las funciones son **asincrónicas** (`async def`) para compatibilidad con FastAPI y el driver `motor`.
-- Los IDs deben ser compatibles con `ObjectId`.
+Una vez que el servicio esté corriendo, la documentación interactiva (Swagger UI) estará disponible en:
 
-## ✅ Ejemplo de uso
-
-```python
-from app.services.product_service import get_all_products
-
-products = await get_all_products(db)
+[http://localhost:8001/docs](http://localhost:8001/docs)
