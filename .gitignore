@@ -1,0 +1,3 @@
+
+/products_service/static/images/*
+!/products_service/static/images/.gitkeep
