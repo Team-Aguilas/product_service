@@ -1,7 +1,8 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from typing import List, Optional
-from common.models import ProductCreate, ProductUpdate, ProductInDB
+from common.models import ProductCreate, ProductUpdate, ProductInDB, PyObjectId
+
 
 PRODUCT_COLLECTION = "products"
 
@@ -12,8 +13,11 @@ async def get_product_by_id(db: AsyncIOMotorDatabase, product_id: str) -> Option
     if not ObjectId.is_valid(product_id): return None
     doc = await db[PRODUCT_COLLECTION].find_one({"_id": ObjectId(product_id)})
     return ProductInDB(**doc) if doc else None
-async def create_product(db: AsyncIOMotorDatabase, product_in: ProductCreate) -> ProductInDB:
-    db_product = ProductInDB(**product_in.model_dump())
+async def create_product(db: AsyncIOMotorDatabase, product_in: ProductCreate, owner_id: PyObjectId) -> ProductInDB:
+    """Crea un nuevo producto en la base de datos, asignando un propietario."""
+    product_data = product_in.model_dump()
+    product_data["owner_id"] = owner_id # Asigna el propietario
+    db_product = ProductInDB(**product_data)
     doc = db_product.model_dump(by_alias=True)
     result = await db[PRODUCT_COLLECTION].insert_one(doc)
     created_doc = await db[PRODUCT_COLLECTION].find_one({"_id": result.inserted_id})

@@ -53,7 +53,11 @@ class ProductBase(BaseModel):
     category: str
     image_url: Optional[str] = None
     tags: Optional[List[str]] = None
-class ProductCreate(ProductBase): pass
+    owner_id: Optional[PyObjectId] = None 
+    
+class ProductCreate(ProductBase):
+    owner_id: Optional[PyObjectId] = Field(None, exclude=True)
+
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=3, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
@@ -62,7 +66,10 @@ class ProductUpdate(BaseModel):
     category: Optional[str] = None
     image_url: Optional[str] = None
     tags: Optional[List[str]] = None
-class ProductInDB(DBModelMixin, ProductBase): pass
+
+class ProductInDB(DBModelMixin, ProductBase):
+    owner_id: PyObjectId
+
 class ProductRead(ProductBase):
     id: PyObjectId = Field(alias="_id")
     model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True, json_encoders={ObjectId: str})
