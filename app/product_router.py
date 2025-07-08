@@ -6,6 +6,7 @@ import uuid
 from .dependencies import get_db, get_current_active_user # Importa el dependency de usuario
 from common.models import ProductCreate, ProductRead, ProductUpdate, UserInDB # Importa UserInDB
 from . import product_service
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -35,9 +36,21 @@ async def create_new_product(
     current_user: UserInDB = Depends(get_current_active_user)
     ):
     return await product_service.create_product(db, product_in=product_in, owner_id=current_user.id)
+
 @router.get("/", response_model=List[ProductRead])
-async def read_all_products(skip: int = 0, limit: int = 20, db: AsyncIOMotorDatabase = Depends(get_db)):
-    return await product_service.get_all_products(db, skip=skip, limit=limit)
+async def read_all_products(
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    search: Optional[str] = None, # 2. Añade el parámetro de búsqueda
+    category: Optional[str] = None, # 3. Añade el parámetro de categoría
+    sort_by: Optional[str] = None, # 4. Añade el parámetro de ordenamiento
+    skip: int = 0,
+    limit: int = 20
+):
+    # 5. Pasa los nuevos parámetros al servicio
+    return await product_service.get_all_products(
+        db, search=search, category=category, sort_by=sort_by, skip=skip, limit=limit
+    )
+
 @router.get("/{product_id}", response_model=ProductRead)
 async def read_product_by_id(product_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
     product = await product_service.get_product_by_id(db, product_id=product_id)

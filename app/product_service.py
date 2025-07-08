@@ -6,9 +6,39 @@ from common.models import ProductCreate, ProductUpdate, ProductInDB, PyObjectId
 
 PRODUCT_COLLECTION = "products"
 
-async def get_all_products(db: AsyncIOMotorDatabase, skip: int = 0, limit: int = 20) -> List[ProductInDB]:
-    docs = await db[PRODUCT_COLLECTION].find().skip(skip).limit(limit).to_list(length=limit)
-    return [ProductInDB(**doc) for doc in docs]
+async def get_all_products(
+    db: AsyncIOMotorDatabase,
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 20
+) -> List[ProductInDB]:
+    """
+    Obtiene una lista de todos los productos con filtros y ordenamiento opcionales.
+    """
+    query = {}
+    
+    # 1. Filtro de Búsqueda por nombre (insensible a mayúsculas/minúsculas)
+    if search:
+        query["name"] = {"$regex": search, "$options": "i"}
+        
+    # 2. Filtro por Categoría
+    if category:
+        query["category"] = category
+        
+    # Construye el cursor de la base de datos con los filtros
+    products_cursor = db[PRODUCT_COLLECTION].find(query).skip(skip).limit(limit)
+    
+    # 3. Ordenamiento
+    if sort_by:
+        if sort_by == "price_asc":
+            products_cursor = products_cursor.sort("price", 1)
+        elif sort_by == "price_desc":
+            products_cursor = products_cursor.sort("price", -1)
+
+    product_docs = await products_cursor.to_list(length=limit)
+    return [ProductInDB(**doc) for doc in product_docs]
 async def get_product_by_id(db: AsyncIOMotorDatabase, product_id: str) -> Optional[ProductInDB]:
     if not ObjectId.is_valid(product_id): return None
     doc = await db[PRODUCT_COLLECTION].find_one({"_id": ObjectId(product_id)})

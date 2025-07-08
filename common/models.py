@@ -46,6 +46,7 @@ class UserRead(UserBase):
 
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=3, max_length=100)
+    whatsapp_number: str = Field(..., examples=["573001234567"])
     description: Optional[str] = Field(None, max_length=500)
     price: float = Field(..., gt=0)
     currency: str = Field("COP")
@@ -60,6 +61,7 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=3, max_length=100)
+    whatsapp_number: Optional[str] = None
     description: Optional[str] = Field(None, max_length=500)
     price: Optional[float] = Field(None, gt=0)
     stock: Optional[int] = Field(None, ge=0)
