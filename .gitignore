@@ -1,3 +1,31 @@
 
 /products_service/static/images/*
 !/products_service/static/images/.gitkeep
+
+# Entorno virtual de Python
+.venv/
+venv/
+
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Instalación de paquetes
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Editor/IDE (opcional)
+.vscode/
+.idea/
+
+# Otros
+*.log
+*.sqlite3

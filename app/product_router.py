@@ -7,17 +7,28 @@ from .dependencies import get_db, get_current_active_user # Importa el dependenc
 from common.models import ProductCreate, ProductRead, ProductUpdate, UserInDB # Importa UserInDB
 from . import product_service
 from typing import List, Optional
+import os
 
 router = APIRouter()
 
-UPLOAD_DIRECTORY = "products_service/static/images"
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # llega a product_service/
+UPLOAD_DIRECTORY = os.path.join(BASE_DIR, "static", "images")
+
+# Asegurar que el directorio de carga existe
+os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
+print(f"UPLOAD_DIRECTORY configurado en: {UPLOAD_DIRECTORY}")
+
+# UPLOAD_DIRECTORY = os.path.join(os.getcwd(), "products_service", "static", "images")
+
+# UPLOAD_DIRECTORY = "products_service/static/images"
 
 @router.post("/upload-image", status_code=status.HTTP_201_CREATED)
 async def upload_image(file: UploadFile = File(...), user: UserInDB = Depends(get_current_active_user)):
     # Genera un nombre de archivo único para evitar sobreescribir imágenes
     file_extension = file.filename.split(".")[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = f"{UPLOAD_DIRECTORY}/{unique_filename}"
+    file_path = os.path.join(UPLOAD_DIRECTORY, unique_filename)
     
     try:
         with open(file_path, "wb") as buffer:
