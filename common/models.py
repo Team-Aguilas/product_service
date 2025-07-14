@@ -54,7 +54,9 @@ class ProductBase(BaseModel):
     category: str
     image_url: Optional[str] = None
     tags: Optional[List[str]] = None
-    owner_id: Optional[PyObjectId] = None 
+    owner_id: Optional[PyObjectId] = None
+    average_rating: Optional[float] = Field(default=0.0, ge=0, le=5)
+    total_ratings: Optional[int] = Field(default=0, ge=0)
     
 class ProductCreate(ProductBase):
     owner_id: Optional[PyObjectId] = Field(None, exclude=True)
@@ -81,3 +83,26 @@ class Token(BaseModel):
     token_type: str
 class TokenData(BaseModel):
     user_id: Optional[str] = None
+
+# Modelos para el sistema de calificaciones
+class RatingBase(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=500)
+
+class RatingInput(RatingBase):
+    """Modelo para crear ratings desde el endpoint (sin product_id porque viene en la URL)"""
+    pass
+
+class RatingCreate(RatingBase):
+    product_id: PyObjectId
+    user_id: Optional[PyObjectId] = Field(None, exclude=True)
+
+class RatingInDB(DBModelMixin, RatingBase):
+    product_id: PyObjectId
+    user_id: PyObjectId
+
+class RatingRead(RatingBase):
+    id: PyObjectId = Field(alias="_id")
+    product_id: PyObjectId
+    user_id: PyObjectId
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True, json_encoders={ObjectId: str})
