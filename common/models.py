@@ -2,6 +2,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import Optional, List
 from pydantic_core import core_schema
+from typing import List
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -106,3 +107,8 @@ class RatingRead(RatingBase):
     product_id: PyObjectId
     user_id: PyObjectId
     model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True, json_encoders={ObjectId: str})
+
+
+class ProductPage(BaseModel):
+    total: int
+    products: List[ProductRead]

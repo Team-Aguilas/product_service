@@ -4,7 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 import shutil
 import uuid 
 from .dependencies import get_db, get_current_active_user # Importa el dependency de usuario
-from common.models import ProductCreate, ProductRead, ProductUpdate, UserInDB, RatingCreate, RatingRead, RatingInput # Importa UserInDB
+from common.models import ProductCreate, ProductRead, ProductUpdate, UserInDB, RatingCreate, RatingRead, RatingInput, ProductPage # Importa UserInDB
 from . import product_service
 from typing import List, Optional
 import os
@@ -48,16 +48,16 @@ async def create_new_product(
     ):
     return await product_service.create_product(db, product_in=product_in, owner_id=current_user.id)
 
-@router.get("/", response_model=List[ProductRead])
+@router.get("/", response_model=ProductPage) # Antes era List[ProductRead]
 async def read_all_products(
     db: AsyncIOMotorDatabase = Depends(get_db),
-    search: Optional[str] = None, # 2. Añade el parámetro de búsqueda
-    category: Optional[str] = None, # 3. Añade el parámetro de categoría
-    sort_by: Optional[str] = None, # 4. Añade el parámetro de ordenamiento
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    sort_by: Optional[str] = None,
     skip: int = 0,
-    limit: int = 20
+    limit: int = 3 # Recomendado para grids
 ):
-    # 5. Pasa los nuevos parámetros al servicio
+    # La llamada al servicio ya está bien, no necesita cambios
     return await product_service.get_all_products(
         db, search=search, category=category, sort_by=sort_by, skip=skip, limit=limit
     )
