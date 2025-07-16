@@ -3,11 +3,13 @@ from typing import List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import shutil
 import uuid 
-from .dependencies import get_db, get_current_active_user # Importa el dependency de usuario
+from .dependencies import get_db, get_current_active_user, get_current_user # Importa el dependency de usuario
 from common.models import ProductCreate, ProductRead, ProductUpdate, UserInDB, RatingCreate, RatingRead, RatingInput, ProductPage # Importa UserInDB
 from . import product_service
 from typing import List, Optional
 import os
+from bson import ObjectId
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -136,3 +138,61 @@ async def get_my_rating_for_product(
     if not rating:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No has calificado este producto")
     return rating
+
+# Modelo para actualización de stock desde carrito
+class CartStockUpdate(BaseModel):
+    product_id: str
+    new_stock: int
+
+@router.post("/cart/update-stock", status_code=status.HTTP_200_OK)
+async def update_stock_from_cart(
+    updates: List[CartStockUpdate],
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Endpoint especial para actualizar stock desde el carrito.
+    Permite a cualquier usuario autenticado actualizar el stock de productos.
+    """
+    try:
+        updated_products = []
+        
+        for update in updates:
+            # Validar que el producto existe
+            product = await product_service.get_product_by_id(update.product_id)
+            if not product:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, 
+                    detail=f"Producto {update.product_id} no encontrado"
+                )
+            
+            # Actualizar stock directamente en la base de datos
+            result = await db["products"].update_one(
+                {"_id": ObjectId(update.product_id)},
+                {"$set": {"stock": update.new_stock}}
+            )
+            
+            if result.modified_count == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"No se pudo actualizar el stock del producto {update.product_id}"
+                )
+            
+            updated_products.append({
+                "product_id": update.product_id,
+                "previous_stock": product["stock"],
+                "new_stock": update.new_stock,
+                "status": "updated"
+            })
+        
+        return {
+            "message": "Stock actualizado exitosamente",
+            "updated_products": updated_products,
+            "total_updated": len(updated_products)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error actualizando stock: {str(e)}"
+        )
