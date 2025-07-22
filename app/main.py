@@ -6,6 +6,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from . import dependencies as global_deps, config
 from .product_router import router as product_router
 from .order_router import router as order_router
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,6 +20,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=config.settings.PROJECT_NAME, lifespan=lifespan)
 # app.mount("/static", StaticFiles(directory="products_service/static"), name="static")
+
+Instrumentator().instrument(app).expose(app)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
