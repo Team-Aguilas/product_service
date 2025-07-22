@@ -20,6 +20,10 @@ async def get_db() -> AsyncIOMotorDatabase:
         raise HTTPException(status_code=503, detail="La base de datos no está disponible.")
     return database_instance
 
+async def get_products_collection(db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Dependencia para obtener la colección de productos."""
+    return db["products"]
+
 # --- Lógica de DB para buscar usuarios (local a este servicio) ---
 async def _get_user_by_id_from_db(db: AsyncIOMotorDatabase, user_id: str) -> Optional[UserInDB]:
     """Función interna para obtener un usuario por ID desde la DB."""

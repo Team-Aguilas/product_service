@@ -5,6 +5,9 @@ from contextlib import asynccontextmanager
 from motor.motor_asyncio import AsyncIOMotorClient
 from . import dependencies as global_deps, config
 from .product_router import router as product_router
+from .order_router import router as order_router
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,10 +21,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=config.settings.PROJECT_NAME, lifespan=lifespan)
 # app.mount("/static", StaticFiles(directory="products_service/static"), name="static")
 
+Instrumentator().instrument(app).expose(app)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(product_router, prefix="/api/v1/products", tags=["Products"])
+app.include_router(order_router, prefix="/api/v1/orders", tags=["Orders"])
 
 @app.get("/")
 def read_root(): return {"service": config.settings.PROJECT_NAME, "status": "ok"}
